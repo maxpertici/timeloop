@@ -30,7 +30,7 @@ export async function createCategory(
     "INSERT INTO categories (name, color) VALUES ($1, $2)",
     [name, color]
   );
-  return result.lastInsertId;
+  return result.lastInsertId ?? 0;
 }
 
 export async function updateCategory(
@@ -96,7 +96,7 @@ export async function createEntry(
     "INSERT INTO entries (title, category_id) VALUES ($1, $2)",
     [title, categoryId]
   );
-  return result.lastInsertId;
+  return result.lastInsertId ?? 0;
 }
 
 export async function updateEntry(
@@ -214,7 +214,7 @@ export async function createTimeEntry(
     "INSERT INTO time_entries (entry_id, duration, date, note) VALUES ($1, $2, $3, $4)",
     [entryId, duration, date, note]
   );
-  return result.lastInsertId;
+  return result.lastInsertId ?? 0;
 }
 
 export async function updateTimeEntry(

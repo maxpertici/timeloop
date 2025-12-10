@@ -1,0 +1,30 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle gradient -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle background -->
+  <circle cx="512" cy="512" r="480" fill="url(#gradient)"/>
+  
+  <!-- Timer arc (270 degrees, starts from top) -->
+  <circle 
+    cx="512" 
+    cy="512" 
+    r="350" 
+    fill="none" 
+    stroke="white" 
+    stroke-width="80" 
+    stroke-linecap="round"
+    stroke-dasharray="2199 2199"
+    stroke-dashoffset="550"
+    transform="rotate(-90 512 512)"
+    opacity="0.95"
+  />
+  
+  <!-- Small dot at the start of arc -->
+  <circle cx="512" cy="162" r="50" fill="white" opacity="0.95"/>
+</svg>
