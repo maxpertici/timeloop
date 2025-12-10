@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Calendar, Plus, Trash2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import {
   createTimeEntry,
   deleteTimeEntry,
   updateEntry,
+  updateTimeEntry,
 } from "@/lib/database";
 import type { Category, Entry, TimeEntry } from "@/types";
 
@@ -49,6 +51,12 @@ export function EntryModal({
   const [categoryId, setCategoryId] = useState(
     entry.category_id?.toString() || "none"
   );
+  const [editingTimeEntryId, setEditingTimeEntryId] = useState<number | null>(null);
+  const [editDuration, setEditDuration] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [timeEntryToDelete, setTimeEntryToDelete] = useState<number | null>(null);
 
   const loadTimeEntries = async () => {
     const entries = await getTimeEntriesForEntry(entry.id);
@@ -80,10 +88,59 @@ export function EntryModal({
     onDataChanged?.(); // Notify parent
   };
 
-  const handleDeleteTimeEntry = async (id: number) => {
-    await deleteTimeEntry(id);
+  const handleDeleteClick = (id: number) => {
+    setTimeEntryToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!timeEntryToDelete) return;
+    
+    await deleteTimeEntry(timeEntryToDelete);
     await loadTimeEntries();
-    onDataChanged?.(); // Notify parent
+    onDataChanged?.();
+    setDeleteDialogOpen(false);
+    setTimeEntryToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setTimeEntryToDelete(null);
+  };
+
+  const handleStartEdit = (te: TimeEntry) => {
+    setEditingTimeEntryId(te.id);
+    setEditDuration(te.duration.toString());
+    setEditDate(te.date);
+    setEditNote(te.note || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTimeEntryId(null);
+    setEditDuration("");
+    setEditDate("");
+    setEditNote("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTimeEntryId) return;
+    
+    const durationMinutes = parseInt(editDuration);
+    if (isNaN(durationMinutes) || durationMinutes <= 0) return;
+
+    await updateTimeEntry(
+      editingTimeEntryId,
+      durationMinutes,
+      editDate,
+      editNote.trim() || null
+    );
+    
+    setEditingTimeEntryId(null);
+    setEditDuration("");
+    setEditDate("");
+    setEditNote("");
+    await loadTimeEntries();
+    onDataChanged?.();
   };
 
   const handleCategoryChange = async (value: string) => {
@@ -209,29 +266,90 @@ export function EntryModal({
                 {timeEntries.map((te) => (
                   <div
                     key={te.id}
-                    className="flex items-center justify-between bg-[var(--muted)] rounded-lg p-3"
+                    className="bg-gray-50 rounded-lg p-3"
                   >
-                    <div>
-                      <span className="font-medium">
-                        {formatDuration(te.duration)}
-                      </span>
-                      <span className="text-sm text-[var(--muted-foreground)] ml-2">
-                        {formatDate(te.date)}
-                      </span>
-                      {te.note && (
-                        <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                          {te.note}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTimeEntry(te.id)}
-                      className="text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {editingTimeEntryId === te.id ? (
+                      // Edit mode
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            placeholder="Minutes"
+                            value={editDuration}
+                            onChange={(e) => setEditDuration(e.target.value)}
+                            min="1"
+                            className="flex-1 bg-white"
+                          />
+                          <Input
+                            type="date"
+                            value={editDate}
+                            onChange={(e) => setEditDate(e.target.value)}
+                            className="flex-1 bg-white"
+                          />
+                        </div>
+                        <Input
+                          placeholder="Note (optionnel)"
+                          value={editNote}
+                          onChange={(e) => setEditNote(e.target.value)}
+                          className="bg-white"
+                        />
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleSaveEdit}
+                          >
+                            <Check className="h-4 w-4 mr-1 text-green-600" />
+                            Sauvegarder
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Annuler
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // View mode
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div>
+                            <span className="font-medium">
+                              {formatDuration(te.duration)}
+                            </span>
+                            <span className="text-sm text-[var(--muted-foreground)] ml-2">
+                              {formatDate(te.date)}
+                            </span>
+                          </div>
+                          {te.note && (
+                            <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                              {te.note}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleStartEdit(te)}
+                            className="h-8 w-8"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(te.id)}
+                            className="h-8 w-8 text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -239,6 +357,29 @@ export function EntryModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
+              Confirmer la suppression
+            </DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce temps enregistré ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDelete}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

@@ -235,3 +235,71 @@ export async function deleteTimeEntry(id: number): Promise<void> {
   await database.execute("DELETE FROM time_entries WHERE id = $1", [id]);
 }
 
+// Calculate total time for specific entries in a date range
+export async function calculateTimeForPeriod(
+  entryIds: number[],
+  startDate: string,
+  endDate: string
+): Promise<number> {
+  if (entryIds.length === 0) return 0;
+  
+  const database = await getDatabase();
+  const placeholders = entryIds.map((_, i) => `$${i + 3}`).join(", ");
+  
+  const result = await database.select<Array<{ total: number }>>(
+    `
+    SELECT COALESCE(SUM(duration), 0) as total
+    FROM time_entries
+    WHERE entry_id IN (${placeholders})
+      AND date >= $1
+      AND date <= $2
+  `,
+    [startDate, endDate, ...entryIds]
+  );
+  
+  return result[0]?.total || 0;
+}
+
+// Get entries with total time filtered by date range
+export async function getEntriesWithTotalTimeForPeriod(
+  startDate: string,
+  endDate: string
+): Promise<
+  Array<{
+    id: number;
+    title: string;
+    category_id: number | null;
+    category_name: string | null;
+    category_color: string | null;
+    total_duration: number;
+    first_date: string;
+    last_date: string;
+    entry_count: number;
+  }>
+> {
+  const database = await getDatabase();
+  return database.select(
+    `
+    SELECT 
+      e.id,
+      e.title,
+      e.category_id,
+      c.name as category_name,
+      c.color as category_color,
+      COALESCE(SUM(te.duration), 0) as total_duration,
+      MIN(te.date) as first_date,
+      MAX(te.date) as last_date,
+      COUNT(te.id) as entry_count
+    FROM entries e
+    LEFT JOIN categories c ON e.category_id = c.id
+    LEFT JOIN time_entries te ON e.id = te.entry_id 
+      AND te.date >= $1 
+      AND te.date <= $2
+    GROUP BY e.id, e.title, e.category_id, c.name, c.color
+    HAVING COUNT(te.id) > 0
+    ORDER BY MAX(te.date) DESC
+  `,
+    [startDate, endDate]
+  );
+}
+

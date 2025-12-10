@@ -193,7 +193,7 @@ export function TrackView() {
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b p-4 space-y-3 shadow-sm">
         {/* Toggle view mode */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Track</h2>
+          <h1 className="text-xl font-semibold">Track</h1>
           <div className="flex gap-1 bg-[var(--muted)] p-1 rounded-lg">
             <Button
               variant={viewMode === "grouped" ? "default" : "ghost"}
