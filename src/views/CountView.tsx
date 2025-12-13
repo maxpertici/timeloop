@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, Search, Edit2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface EntryWithTotal {
 }
 
 export function CountView() {
+  const { t, i18n } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [allEntries, setAllEntries] = useState<EntryWithTotal[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<EntryWithTotal[]>([]);
@@ -183,7 +185,7 @@ export function CountView() {
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b p-4 space-y-3 shadow-sm">
         {/* Title + Period buttons */}
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold">Count</h1>
+          <h1 className="text-xl font-semibold">{t('count.title')}</h1>
           
           {/* Period quick buttons */}
           <div className="flex gap-2 flex-wrap">
@@ -192,28 +194,28 @@ export function CountView() {
               size="sm"
               onClick={() => updatePeriod("today")}
             >
-              Today
+              {t('count.today')}
             </Button>
             <Button
               variant={periodType === "week" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("week")}
             >
-              This week
+              {t('count.thisWeek')}
             </Button>
             <Button
               variant={periodType === "month" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("month")}
             >
-              This month
+              {t('count.thisMonth')}
             </Button>
             <Button
               variant={periodType === "30days" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("30days")}
             >
-              Last 30 days
+              {t('count.last30Days')}
             </Button>
             <Button
               variant={periodType === "custom" ? "default" : "outline"}
@@ -221,7 +223,7 @@ export function CountView() {
               onClick={() => updatePeriod("custom")}
             >
               <Calendar className="h-4 w-4 mr-1" />
-              Custom
+              {t('count.custom')}
             </Button>
           </div>
         </div>
@@ -256,7 +258,7 @@ export function CountView() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
             <Input
-              placeholder="Search for an entry..."
+              placeholder={t('count.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -267,7 +269,7 @@ export function CountView() {
               variant="default" 
               className="px-3 py-1 text-sm shrink-0"
             >
-              {selectedEntries.size} selected
+              {selectedEntries.size} {t('count.selected')}
             </Badge>
           )}
         </div>
@@ -277,7 +279,7 @@ export function CountView() {
       <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-20">
         {filteredEntries.length === 0 ? (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            <p>No entries found</p>
+            <p>{t('count.noEntriesFound')}</p>
           </div>
         ) : (
           filteredEntries.map((entry) => {
@@ -321,7 +323,7 @@ export function CountView() {
                       )}
                     </div>
                     <div className="text-sm text-[var(--muted-foreground)] mt-0.5">
-                      {entry.entry_count} {entry.entry_count > 1 ? "entries" : "entry"}
+                      {entry.entry_count} {entry.entry_count > 1 ? t('count.entries') : t('count.entry')}
                     </div>
                   </div>
 
@@ -355,15 +357,15 @@ export function CountView() {
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div>
             <div className="text-sm text-[var(--muted-foreground)]">
-              {selectedEntries.size} {selectedEntries.size > 1 ? "entries" : "entry"} selected
+              {selectedEntries.size} {selectedEntries.size > 1 ? t('count.entries') : t('count.entry')} {t('count.selected')}
             </div>
             <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              From {startDate ? new Date(startDate).toLocaleDateString("en-US") : "..."} to{" "}
-              {endDate ? new Date(endDate).toLocaleDateString("en-US") : "..."}
+              {t('track.from')} {startDate ? new Date(startDate).toLocaleDateString(i18n.language) : "..."} {t('track.to')}{" "}
+              {endDate ? new Date(endDate).toLocaleDateString(i18n.language) : "..."}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-[var(--muted-foreground)]">Total</div>
+            <div className="text-sm text-[var(--muted-foreground)]">{t('count.total')}</div>
             <div className="text-2xl font-bold text-[var(--primary)]">
               {formatDuration(totalMinutes)}
             </div>

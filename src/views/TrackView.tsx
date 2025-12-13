@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Search, List, Layers, Edit2, Trash2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import type { Category, Entry, TimeEntryWithDetails } from "@/types";
 type ViewMode = "detailed" | "grouped";
 
 export function TrackView() {
+  const { t, i18n } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [timeEntries, setTimeEntries] = useState<TimeEntryWithDetails[]>([]);
   const [groupedEntries, setGroupedEntries] = useState<any[]>([]);
@@ -137,7 +139,7 @@ export function TrackView() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(i18n.language, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -193,7 +195,7 @@ export function TrackView() {
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b p-4 space-y-3 shadow-sm">
         {/* Toggle view mode */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Track</h1>
+          <h1 className="text-xl font-semibold">{t('track.title')}</h1>
           <div className="flex gap-1 bg-[var(--muted)] p-1 rounded-lg">
             <Button
               variant={viewMode === "grouped" ? "default" : "ghost"}
@@ -202,7 +204,7 @@ export function TrackView() {
               className="h-8 px-3"
             >
               <Layers className="h-4 w-4 mr-1" />
-              Grouped
+              {t('track.grouped')}
             </Button>
             <Button
               variant={viewMode === "detailed" ? "default" : "ghost"}
@@ -211,7 +213,7 @@ export function TrackView() {
               className="h-8 px-3"
             >
               <List className="h-4 w-4 mr-1" />
-              Detailed
+              {t('track.detailed')}
             </Button>
           </div>
         </div>
@@ -221,7 +223,7 @@ export function TrackView() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
             <Input
               ref={inputRef}
-              placeholder="Search or create an entry..."
+              placeholder={t('track.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -248,7 +250,7 @@ export function TrackView() {
                 {searchResults.length > 0 && (
                   <div className="p-1">
                     <div className="px-2 py-1.5 text-xs font-medium text-[var(--muted-foreground)]">
-                      Existing entries
+                      {t('track.existingEntries')}
                     </div>
                     {searchResults.map((entry) => (
                       <button
@@ -275,14 +277,14 @@ export function TrackView() {
                 {searchQuery.trim() && (
                   <div className="p-1 border-t">
                     <div className="px-2 py-1.5 text-xs font-medium text-[var(--muted-foreground)]">
-                      New entry
+                      {t('track.newEntry')}
                     </div>
                     <button
                       onClick={handleCreateNewEntry}
                       className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-[var(--accent)] text-left"
                     >
                       <Plus className="h-4 w-4" />
-                      Create "{searchQuery}"
+                      {t('track.createEntry', { query: searchQuery })}
                     </button>
                   </div>
                 )}
@@ -292,10 +294,10 @@ export function TrackView() {
 
           <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t('track.category')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="none">{t('track.categoryNone')}</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id.toString()}>
                   <div className="flex items-center gap-2">
@@ -318,11 +320,11 @@ export function TrackView() {
           // Grouped view
           filteredGroupedEntries.length === 0 ? (
             <div className="text-center py-12 text-[var(--muted-foreground)]">
-              <p>No entries</p>
+              <p>{t('track.noEntries')}</p>
               <p className="text-sm mt-1">
                 {selectedCategoryId && selectedCategoryId !== "none"
-                  ? "No entries for this category"
-                  : "Use the search bar to create your first entry"}
+                  ? t('track.noEntriesCategory')
+                  : t('track.noEntriesHint')}
               </p>
             </div>
           ) : (
@@ -361,16 +363,16 @@ export function TrackView() {
                     <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mt-0.5">
                       {entry.entry_count > 0 ? (
                         <>
-                          <span>{entry.entry_count} {entry.entry_count > 1 ? 'entries' : 'entry'}</span>
+                          <span>{entry.entry_count} {entry.entry_count > 1 ? t('track.entries') : t('track.entry')}</span>
                           <span>•</span>
                           {entry.first_date === entry.last_date ? (
                             <span>{formatDate(entry.last_date)}</span>
                           ) : (
-                            <span>From {formatDate(entry.first_date)} to {formatDate(entry.last_date)}</span>
+                            <span>{t('track.from')} {formatDate(entry.first_date)} {t('track.to')} {formatDate(entry.last_date)}</span>
                           )}
                         </>
                       ) : (
-                        <span>No time recorded yet</span>
+                        <span>{t('track.noTimeRecorded')}</span>
                       )}
                     </div>
                   </div>
@@ -416,11 +418,11 @@ export function TrackView() {
           // Detailed view
           filteredTimeEntries.length === 0 ? (
             <div className="text-center py-12 text-[var(--muted-foreground)]">
-              <p>No time entries</p>
+              <p>{t('track.noEntries')}</p>
               <p className="text-sm mt-1">
                 {selectedCategoryId && selectedCategoryId !== "none"
-                  ? "Aucune entrée pour cette catégorie"
-                  : "Utilisez la barre de recherche pour créer votre première entrée"}
+                  ? t('track.noEntriesCategory')
+                  : t('track.noEntriesHint')}
               </p>
             </div>
           ) : (
@@ -520,20 +522,20 @@ export function TrackView() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirm deletion
+              {t('track.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
               {deleteTarget?.type === 'entry'
-                ? "Are you sure you want to delete this entry and all its associated times? This action is irreversible."
-                : "Are you sure you want to delete this recorded time? This action is irreversible."}
+                ? t('track.confirmDeleteEntry')
+                : t('track.confirmDeleteTimeEntry')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
+              {t('track.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Delete
+              {t('track.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

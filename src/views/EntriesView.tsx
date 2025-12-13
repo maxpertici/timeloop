@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Trash2, Tag, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import {
 import type { Category, Entry } from "@/types";
 
 export function EntriesView() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -148,9 +150,9 @@ export function EntriesView() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b p-4 space-y-3 shadow-sm">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Entries</h1>
+          <h1 className="text-xl font-semibold">{t('entries.title')}</h1>
           <div className="text-sm text-[var(--muted-foreground)]">
-            {entries.length} {entries.length > 1 ? 'entries' : 'entry'}
+            {entries.length} {entries.length > 1 ? t('entries.entries') : t('entries.entry')}
           </div>
         </div>
 
@@ -158,7 +160,7 @@ export function EntriesView() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
           <Input
-            placeholder="Search for an entry..."
+            placeholder={t('entries.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -169,7 +171,7 @@ export function EntriesView() {
         {selectedEntries.size > 0 && (
           <div className="flex items-center gap-2 bg-[var(--accent)] p-2 rounded-lg">
             <span className="text-sm font-medium flex-1">
-              {selectedEntries.size} selected
+              {selectedEntries.size} {t('entries.selected')}
             </span>
             <Button
               variant="outline"
@@ -178,7 +180,7 @@ export function EntriesView() {
               className="h-8"
             >
               <Tag className="h-4 w-4 mr-1" />
-              Assign category
+              {t('entries.assignCategory')}
             </Button>
             <Button
               variant="destructive"
@@ -187,7 +189,7 @@ export function EntriesView() {
               className="h-8"
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              Supprimer
+              {t('entries.delete')}
             </Button>
           </div>
         )}
@@ -207,18 +209,18 @@ export function EntriesView() {
               ) : (
                 <Square className="h-4 w-4" />
               )}
-              Select all
+              {t('entries.selectAll')}
             </button>
           </div>
         )}
 
         {filteredEntries.length === 0 ? (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            <p>No entries found</p>
+            <p>{t('entries.noEntriesFound')}</p>
             <p className="text-sm mt-1">
               {searchQuery
-                ? "Try another search"
-                : "Create your first entry in the Track tab"}
+                ? t('entries.tryAnotherSearch')
+                : t('entries.createFirstEntry')}
             </p>
           </div>
         ) : (
@@ -284,19 +286,21 @@ export function EntriesView() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirm deletion
+              {t('entries.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {selectedEntries.size} {selectedEntries.size > 1 ? 'entries' : 'entry'} and all associated times? This
-              action is irreversible.
+              {t('entries.confirmDeleteMessage', { 
+                count: selectedEntries.size, 
+                entriesWord: selectedEntries.size > 1 ? t('entries.entries') : t('entries.entry') 
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
+              {t('entries.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDeleteBatch}>
-              Delete
+              {t('entries.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -306,9 +310,12 @@ export function EntriesView() {
       <Dialog open={assignCategoryDialogOpen} onOpenChange={setAssignCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign a category</DialogTitle>
+            <DialogTitle>{t('entries.assignCategoryTitle')}</DialogTitle>
             <DialogDescription>
-              Choose a category to assign to {selectedEntries.size} selected {selectedEntries.size > 1 ? 'entries' : 'entry'}.
+              {t('entries.assignCategoryMessage', { 
+                count: selectedEntries.size, 
+                entriesWord: selectedEntries.size > 1 ? t('entries.entries') : t('entries.entry') 
+              })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -317,10 +324,10 @@ export function EntriesView() {
               onValueChange={setSelectedCategoryForBatch}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={t('entries.selectCategoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t('entries.categoryNone')}</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                     <div className="flex items-center gap-2">
@@ -337,10 +344,10 @@ export function EntriesView() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelAssignCategory}>
-              Annuler
+              {t('entries.cancel')}
             </Button>
             <Button onClick={handleConfirmAssignCategory}>
-              Assign
+              {t('entries.assign')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, Plus, Trash2, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +46,7 @@ export function EntryModal({
   isNewEntry = false,
   onDataChanged,
 }: EntryModalProps) {
+  const { t, i18n } = useTranslation();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [duration, setDuration] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -201,7 +203,7 @@ export function EntryModal({
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", {
+    return d.toLocaleDateString(i18n.language, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -258,7 +260,7 @@ export function EntryModal({
                     }
                   }}
                   className="text-lg font-semibold flex-1"
-                  placeholder="Entry title"
+                  placeholder={t('entryModal.entryTitle')}
                 />
               ) : (
                 <h2 className="text-lg font-semibold flex-1">{title}</h2>
@@ -269,7 +271,7 @@ export function EntryModal({
                   size="icon"
                   onClick={handleStartEditTitle}
                   className="h-8 w-8 shrink-0"
-                  title="Edit title"
+                  title={t('entryModal.editTitle')}
                 >
                   <Edit2 className="h-4 w-4" />
                 </Button>
@@ -278,7 +280,7 @@ export function EntryModal({
                   size="icon"
                   onClick={handleDeleteEntry}
                   className="h-8 w-8 shrink-0 text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
-                  title="Delete entry"
+                  title={t('entryModal.deleteEntry')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -287,8 +289,8 @@ export function EntryModal({
             
             <DialogDescription className="mt-4">
               {isNewEntry
-                ? "New entry created. Add time below."
-                : `Total: ${formatDuration(totalTime)}`}
+                ? t('entryModal.newEntryCreated')
+                : t('entryModal.total', { time: formatDuration(totalTime) })}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -296,13 +298,13 @@ export function EntryModal({
         <div className="space-y-6 pt-4">
           {/* Category selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Category</label>
+            <label className="text-sm font-medium">{t('entryModal.category')}</label>
             <Select value={categoryId} onValueChange={handleCategoryChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={t('entryModal.selectCategoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="none">{t('entryModal.categoryNone')}</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                     <div className="flex items-center gap-2">
@@ -320,13 +322,13 @@ export function EntryModal({
 
           {/* Add time form */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">Add time</label>
+            <label className="text-sm font-medium">{t('entryModal.addTime')}</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
                   ref={durationInputRef}
                   type="number"
-                  placeholder="Minutes"
+                  placeholder={t('entryModal.minutes')}
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
                   min="1"
@@ -346,7 +348,7 @@ export function EntryModal({
               </Button>
             </div>
             <Input
-              placeholder="Note (optional)"
+              placeholder={t('entryModal.noteOptional')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -354,10 +356,10 @@ export function EntryModal({
 
           {/* Time entries history */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">History</label>
+            <label className="text-sm font-medium">{t('entryModal.history')}</label>
             {timeEntries.length === 0 ? (
               <p className="text-sm text-[var(--muted-foreground)] py-4 text-center">
-                No time recorded
+                {t('entryModal.noTimeRecorded')}
               </p>
             ) : (
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -372,7 +374,7 @@ export function EntryModal({
                         <div className="flex gap-2">
                           <Input
                             type="number"
-                            placeholder="Minutes"
+                            placeholder={t('entryModal.minutes')}
                             value={editDuration}
                             onChange={(e) => setEditDuration(e.target.value)}
                             min="1"
@@ -386,7 +388,7 @@ export function EntryModal({
                           />
                         </div>
                         <Input
-                          placeholder="Note (optional)"
+                          placeholder={t('entryModal.noteOptional')}
                           value={editNote}
                           onChange={(e) => setEditNote(e.target.value)}
                           className="bg-white"
@@ -398,7 +400,7 @@ export function EntryModal({
                             onClick={handleSaveEdit}
                           >
                             <Check className="h-4 w-4 mr-1 text-green-600" />
-                            Save
+                            {t('entryModal.save')}
                           </Button>
                           <Button
                             variant="ghost"
@@ -406,7 +408,7 @@ export function EntryModal({
                             onClick={handleCancelEdit}
                           >
                             <X className="h-4 w-4 mr-1" />
-                            Cancel
+                            {t('entryModal.cancel')}
                           </Button>
                         </div>
                       </div>
@@ -462,18 +464,18 @@ export function EntryModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirm deletion
+              {t('entryModal.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this recorded time? This action is irreversible.
+              {t('entryModal.confirmDeleteTimeEntry')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
+              {t('entryModal.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Delete
+              {t('entryModal.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -485,18 +487,18 @@ export function EntryModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirm entry deletion
+              {t('entryModal.confirmEntryDeletion')}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this entire entry and all its associated times? This action is irreversible.
+              {t('entryModal.confirmDeleteEntry')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDeleteEntry}>
-              Cancel
+              {t('entryModal.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDeleteEntry}>
-              Delete entry
+              {t('entryModal.deleteEntry')}
             </Button>
           </DialogFooter>
         </DialogContent>

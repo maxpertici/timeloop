@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Clock, Calculator, List, Tags } from "lucide-react";
 
@@ -9,14 +10,16 @@ interface LayoutProps {
   onViewChange: (view: View) => void;
 }
 
-const navItems: { id: View; label: string; icon: React.ReactNode }[] = [
-  { id: "track", label: "Track", icon: <Clock className="h-5 w-5" /> },
-  { id: "count", label: "Count", icon: <Calculator className="h-5 w-5" /> },
-  { id: "entries", label: "Entries", icon: <List className="h-5 w-5" /> },
-  { id: "categories", label: "Categories", icon: <Tags className="h-5 w-5" /> },
-];
-
 export function Layout({ children, currentView, onViewChange }: LayoutProps) {
+  const { t } = useTranslation();
+
+  const navItems: { id: View; labelKey: string; icon: React.ReactNode }[] = [
+    { id: "track", labelKey: "nav.track", icon: <Clock className="h-5 w-5" /> },
+    { id: "count", labelKey: "nav.count", icon: <Calculator className="h-5 w-5" /> },
+    { id: "entries", labelKey: "nav.entries", icon: <List className="h-5 w-5" /> },
+    { id: "categories", labelKey: "nav.categories", icon: <Tags className="h-5 w-5" /> },
+  ];
+
   return (
     <div className="h-screen bg-[var(--background)] flex flex-col">
       {/* Main content */}
@@ -37,7 +40,7 @@ export function Layout({ children, currentView, onViewChange }: LayoutProps) {
               )}
             >
               {item.icon}
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-xs font-medium">{t(item.labelKey)}</span>
             </button>
           ))}
         </div>

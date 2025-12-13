@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Trash2, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ const PRESET_COLORS = [
 ];
 
 export function CategoriesView() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
@@ -111,18 +113,18 @@ export function CategoriesView() {
 
   return (
     <div className="h-full flex flex-col p-4">
-      <h1 className="text-xl font-semibold mb-4">Categories</h1>
+      <h1 className="text-xl font-semibold mb-4">{t('categories.title')}</h1>
 
       {/* Create form */}
       <div className="space-y-3 mb-6 p-4 bg-[var(--card)] border rounded-lg">
         <Input
-          placeholder="Category name"
+          placeholder={t('categories.categoryName')}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
         />
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[var(--muted-foreground)] shrink-0">Color:</span>
+          <span className="text-sm text-[var(--muted-foreground)] shrink-0">{t('categories.color')}</span>
           <div className="flex gap-1 flex-wrap flex-1">
             {PRESET_COLORS.map((color) => (
               <button
@@ -137,7 +139,7 @@ export function CategoriesView() {
           </div>
           <Button onClick={handleCreate} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
-            Add
+            {t('categories.add')}
           </Button>
         </div>
       </div>
@@ -146,8 +148,8 @@ export function CategoriesView() {
       <div className="flex-1 overflow-y-auto space-y-2">
         {categories.length === 0 ? (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            <p>No categories</p>
-            <p className="text-sm mt-1">Create your first category above</p>
+            <p>{t('categories.noCategories')}</p>
+            <p className="text-sm mt-1">{t('categories.createFirstCategory')}</p>
           </div>
         ) : (
           categories.map((cat) => (
@@ -221,19 +223,18 @@ export function CategoriesView() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirm deletion
+              {t('categories.confirmDelete')}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this category? This action is irreversible.
-              Associated entries will lose their category.
+              {t('categories.confirmDeleteMessage')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
+              {t('categories.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Delete
+              {t('categories.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
