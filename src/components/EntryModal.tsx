@@ -195,15 +195,9 @@ export function EntryModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleTitleBlur}
-                className="text-lg font-semibold flex-1"
-                placeholder="Entry title"
-              />
-              {currentCategory && (
+            {/* Category badge at top left */}
+            <div className="min-h-[24px] flex items-center">
+              {currentCategory ? (
                 <Badge
                   variant="secondary"
                   style={{
@@ -213,8 +207,20 @@ export function EntryModal({
                 >
                   {currentCategory.name}
                 </Badge>
+              ) : (
+                <div className="h-[24px]"></div>
               )}
             </div>
+            
+            {/* Title input below category */}
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              className="text-lg font-semibold"
+              placeholder="Entry title"
+            />
+            
             <DialogDescription>
               {isNewEntry
                 ? "New entry created. Add time below."
