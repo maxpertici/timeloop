@@ -189,6 +189,44 @@ export async function getEntriesWithTotalTime(): Promise<
   );
 }
 
+export async function getEntriesWithTotalTimeIncludingEmpty(): Promise<
+  Array<{
+    id: number;
+    title: string;
+    category_id: number | null;
+    category_name: string | null;
+    category_color: string | null;
+    total_duration: number;
+    first_date: string | null;
+    last_date: string | null;
+    entry_count: number;
+  }>
+> {
+  const database = await getDatabase();
+  return database.select(
+    `
+    SELECT 
+      e.id,
+      e.title,
+      e.category_id,
+      c.name as category_name,
+      c.color as category_color,
+      COALESCE(SUM(te.duration), 0) as total_duration,
+      MIN(te.date) as first_date,
+      MAX(te.date) as last_date,
+      COUNT(te.id) as entry_count
+    FROM entries e
+    LEFT JOIN categories c ON e.category_id = c.id
+    LEFT JOIN time_entries te ON e.id = te.entry_id
+    GROUP BY e.id, e.title, e.category_id, c.name, c.color
+    ORDER BY 
+      CASE WHEN MAX(te.date) IS NULL THEN 1 ELSE 0 END,
+      MAX(te.date) DESC,
+      e.title ASC
+  `
+  );
+}
+
 export async function getTimeEntriesForEntry(
   entryId: number
 ): Promise<TimeEntry[]> {

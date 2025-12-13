@@ -22,6 +22,7 @@ import {
   getTimeEntriesForEntry,
   createTimeEntry,
   deleteTimeEntry,
+  deleteEntry,
   updateEntry,
   updateTimeEntry,
 } from "@/lib/database";
@@ -58,7 +59,10 @@ export function EntryModal({
   const [editNote, setEditNote] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [timeEntryToDelete, setTimeEntryToDelete] = useState<number | null>(null);
+  const [deleteEntryDialogOpen, setDeleteEntryDialogOpen] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const durationInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const loadTimeEntries = async () => {
     const entries = await getTimeEntriesForEntry(entry.id);
@@ -70,6 +74,7 @@ export function EntryModal({
       loadTimeEntries();
       setTitle(entry.title);
       setCategoryId(entry.category_id?.toString() || "none");
+      setIsEditingTitle(false);
       // Focus on duration input after a small delay to ensure the dialog is fully rendered
       setTimeout(() => {
         durationInputRef.current?.focus();
@@ -161,12 +166,37 @@ export function EntryModal({
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
       setTitle(entry.title); // Reset to original if empty
+      setIsEditingTitle(false);
       return;
     }
     if (trimmedTitle !== entry.title) {
       await updateEntry(entry.id, trimmedTitle, entry.category_id);
       onDataChanged?.(); // Notify parent
     }
+    setIsEditingTitle(false);
+  };
+
+  const handleStartEditTitle = () => {
+    setIsEditingTitle(true);
+    setTimeout(() => {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.select();
+    }, 50);
+  };
+
+  const handleDeleteEntry = () => {
+    setDeleteEntryDialogOpen(true);
+  };
+
+  const handleConfirmDeleteEntry = async () => {
+    await deleteEntry(entry.id);
+    setDeleteEntryDialogOpen(false);
+    onDataChanged?.();
+    onClose();
+  };
+
+  const handleCancelDeleteEntry = () => {
+    setDeleteEntryDialogOpen(false);
   };
 
   const formatDate = (dateStr: string) => {
@@ -193,10 +223,10 @@ export function EntryModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="space-y-3">
-            {/* Category badge at top left */}
-            <div className="min-h-[24px] flex items-center">
+        <DialogHeader className="-mt-2">
+          <div className="space-y-2">
+            {/* Category badge at top left - aligned with close button */}
+            <div className="min-h-[20px] flex items-center pb-3 mb-6 border-b">
               {currentCategory ? (
                 <Badge
                   variant="secondary"
@@ -208,20 +238,54 @@ export function EntryModal({
                   {currentCategory.name}
                 </Badge>
               ) : (
-                <div className="h-[24px]"></div>
+                <div className="h-[20px]"></div>
               )}
             </div>
             
-            {/* Title input below category */}
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleBlur}
-              className="text-lg font-semibold"
-              placeholder="Entry title"
-            />
+            {/* Title with edit/delete buttons */}
+            <div className="flex items-center gap-2">
+              {isEditingTitle ? (
+                <Input
+                  ref={titleInputRef}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={handleTitleBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleTitleBlur();
+                    if (e.key === "Escape") {
+                      setTitle(entry.title);
+                      setIsEditingTitle(false);
+                    }
+                  }}
+                  className="text-lg font-semibold flex-1"
+                  placeholder="Entry title"
+                />
+              ) : (
+                <h2 className="text-lg font-semibold flex-1">{title}</h2>
+              )}
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleStartEditTitle}
+                  className="h-8 w-8 shrink-0"
+                  title="Edit title"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDeleteEntry}
+                  className="h-8 w-8 shrink-0 text-[var(--destructive)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
+                  title="Delete entry"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             
-            <DialogDescription>
+            <DialogDescription className="mt-4">
               {isNewEntry
                 ? "New entry created. Add time below."
                 : `Total: ${formatDuration(totalTime)}`}
@@ -229,7 +293,7 @@ export function EntryModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 pt-4">
           {/* Category selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Category</label>
@@ -392,7 +456,7 @@ export function EntryModal({
         </div>
       </DialogContent>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete time entry confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -410,6 +474,29 @@ export function EntryModal({
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete entry confirmation dialog */}
+      <Dialog open={deleteEntryDialogOpen} onOpenChange={setDeleteEntryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
+              Confirm entry deletion
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this entire entry and all its associated times? This action is irreversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDeleteEntry}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDeleteEntry}>
+              Delete entry
             </Button>
           </DialogFooter>
         </DialogContent>

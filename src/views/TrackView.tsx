@@ -22,7 +22,7 @@ import { EntryModal } from "@/components/EntryModal";
 import {
   getCategories,
   getTimeEntries,
-  getEntriesWithTotalTime,
+  getEntriesWithTotalTimeIncludingEmpty,
   searchEntries,
   createEntry,
   getEntryById,
@@ -52,7 +52,7 @@ export function TrackView() {
     const [cats, entries, grouped] = await Promise.all([
       getCategories(),
       getTimeEntries(),
-      getEntriesWithTotalTime(),
+      getEntriesWithTotalTimeIncludingEmpty(),
     ]);
     setCategories(cats);
     setTimeEntries(entries);
@@ -318,11 +318,11 @@ export function TrackView() {
           // Grouped view
           filteredGroupedEntries.length === 0 ? (
             <div className="text-center py-12 text-[var(--muted-foreground)]">
-              <p>Aucune entrée de temps</p>
+              <p>No entries</p>
               <p className="text-sm mt-1">
                 {selectedCategoryId && selectedCategoryId !== "none"
-                  ? "Aucune entrée pour cette catégorie"
-                  : "Utilisez la barre de recherche pour créer votre première entrée"}
+                  ? "No entries for this category"
+                  : "Use the search bar to create your first entry"}
               </p>
             </div>
           ) : (
@@ -359,12 +359,18 @@ export function TrackView() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mt-0.5">
-                      <span>{entry.entry_count} {entry.entry_count > 1 ? 'entries' : 'entry'}</span>
-                      <span>•</span>
-                      {entry.first_date === entry.last_date ? (
-                        <span>{formatDate(entry.last_date)}</span>
+                      {entry.entry_count > 0 ? (
+                        <>
+                          <span>{entry.entry_count} {entry.entry_count > 1 ? 'entries' : 'entry'}</span>
+                          <span>•</span>
+                          {entry.first_date === entry.last_date ? (
+                            <span>{formatDate(entry.last_date)}</span>
+                          ) : (
+                            <span>From {formatDate(entry.first_date)} to {formatDate(entry.last_date)}</span>
+                          )}
+                        </>
                       ) : (
-                        <span>From {formatDate(entry.first_date)} to {formatDate(entry.last_date)}</span>
+                        <span>No time recorded yet</span>
                       )}
                     </div>
                   </div>
