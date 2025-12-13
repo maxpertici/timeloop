@@ -48,6 +48,7 @@ export function EntryModal({
   const [duration, setDuration] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
+  const [title, setTitle] = useState(entry.title);
   const [categoryId, setCategoryId] = useState(
     entry.category_id?.toString() || "none"
   );
@@ -66,9 +67,10 @@ export function EntryModal({
   useEffect(() => {
     if (isOpen) {
       loadTimeEntries();
+      setTitle(entry.title);
       setCategoryId(entry.category_id?.toString() || "none");
     }
-  }, [isOpen, entry.id, entry.category_id]);
+  }, [isOpen, entry.id, entry.title, entry.category_id]);
 
   const handleAddTime = async () => {
     const durationMinutes = parseInt(duration);
@@ -146,8 +148,20 @@ export function EntryModal({
   const handleCategoryChange = async (value: string) => {
     setCategoryId(value);
     const newCategoryId = value && value !== "none" ? parseInt(value) : null;
-    await updateEntry(entry.id, entry.title, newCategoryId);
+    await updateEntry(entry.id, title, newCategoryId);
     onDataChanged?.(); // Notify parent
+  };
+
+  const handleTitleBlur = async () => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setTitle(entry.title); // Reset to original if empty
+      return;
+    }
+    if (trimmedTitle !== entry.title) {
+      await updateEntry(entry.id, trimmedTitle, entry.category_id);
+      onDataChanged?.(); // Notify parent
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -175,25 +189,33 @@ export function EntryModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {entry.title}
-            {currentCategory && (
-              <Badge
-                variant="secondary"
-                style={{
-                  backgroundColor: `${currentCategory.color}20`,
-                  color: currentCategory.color,
-                }}
-              >
-                {currentCategory.name}
-              </Badge>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {isNewEntry
-              ? "Nouvelle entrée créée. Ajoutez du temps ci-dessous."
-              : `Total: ${formatDuration(totalTime)}`}
-          </DialogDescription>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleBlur}
+                className="text-lg font-semibold flex-1"
+                placeholder="Titre de l'entrée"
+              />
+              {currentCategory && (
+                <Badge
+                  variant="secondary"
+                  style={{
+                    backgroundColor: `${currentCategory.color}20`,
+                    color: currentCategory.color,
+                  }}
+                >
+                  {currentCategory.name}
+                </Badge>
+              )}
+            </div>
+            <DialogDescription>
+              {isNewEntry
+                ? "Nouvelle entrée créée. Ajoutez du temps ci-dessous."
+                : `Total: ${formatDuration(totalTime)}`}
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
