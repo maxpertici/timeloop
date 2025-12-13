@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar, Plus, Trash2, Edit2, Check, X, AlertTriangle } from "lucide-react";
 import {
   Dialog,
@@ -58,6 +58,7 @@ export function EntryModal({
   const [editNote, setEditNote] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [timeEntryToDelete, setTimeEntryToDelete] = useState<number | null>(null);
+  const durationInputRef = useRef<HTMLInputElement>(null);
 
   const loadTimeEntries = async () => {
     const entries = await getTimeEntriesForEntry(entry.id);
@@ -69,6 +70,10 @@ export function EntryModal({
       loadTimeEntries();
       setTitle(entry.title);
       setCategoryId(entry.category_id?.toString() || "none");
+      // Focus on duration input after a small delay to ensure the dialog is fully rendered
+      setTimeout(() => {
+        durationInputRef.current?.focus();
+      }, 100);
     }
   }, [isOpen, entry.id, entry.title, entry.category_id]);
 
@@ -249,6 +254,7 @@ export function EntryModal({
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
+                  ref={durationInputRef}
                   type="number"
                   placeholder="Minutes"
                   value={duration}
