@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EntryModal } from "@/components/EntryModal";
-import { getEntriesWithTotalTimeForPeriod, getCategories, calculateTimeForPeriod, getEntryById } from "@/lib/database";
+import { getEntriesWithTotalTimeForPeriod, getEntriesWithTotalTime, getCategories, calculateTimeForPeriod, getEntryById } from "@/lib/database";
 import type { Category, Entry } from "@/types";
 
 interface EntryWithTotal {
@@ -30,44 +30,69 @@ export function CountView() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [totalMinutes, setTotalMinutes] = useState(0);
-  const [periodType, setPeriodType] = useState<"today" | "week" | "month" | "30days" | "custom">("30days");
+  const [periodType, setPeriodType] = useState<"all" | "today" | "week" | "month" | "30days" | "custom">("all");
   const [showCustomDates, setShowCustomDates] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // Set default period: last 30 days
-    updatePeriod("30days");
+    // Set default period: all on mount
+    setPeriodType("all");
+    // Load categories on mount
+    const loadCategories = async () => {
+      const cats = await getCategories();
+      setCategories(cats);
+    };
+    loadCategories();
   }, []);
 
   // Reload entries when period changes
   useEffect(() => {
-    if (startDate && endDate) {
+    const loadEntriesForPeriod = async () => {
+      if (periodType === "all") {
+        const entries = await getEntriesWithTotalTime();
+        setAllEntries(entries);
+        setFilteredEntries(entries);
+      } else if (startDate && endDate) {
+        const entries = await getEntriesWithTotalTimeForPeriod(startDate, endDate);
+        setAllEntries(entries);
+        setFilteredEntries(entries);
+      }
+    };
+    
+    if (periodType === "all" || (startDate && endDate)) {
       loadEntriesForPeriod();
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, periodType]);
 
   const loadData = async () => {
     const cats = await getCategories();
     setCategories(cats);
-    await loadEntriesForPeriod();
-  };
-
-  const loadEntriesForPeriod = async () => {
-    if (!startDate || !endDate) return;
     
-    const entries = await getEntriesWithTotalTimeForPeriod(startDate, endDate);
-    setAllEntries(entries);
-    setFilteredEntries(entries);
+    if (periodType === "all") {
+      const entries = await getEntriesWithTotalTime();
+      setAllEntries(entries);
+      setFilteredEntries(entries);
+    } else if (startDate && endDate) {
+      const entries = await getEntriesWithTotalTimeForPeriod(startDate, endDate);
+      setAllEntries(entries);
+      setFilteredEntries(entries);
+    }
   };
 
-  const updatePeriod = (type: "today" | "week" | "month" | "30days" | "custom") => {
+  const updatePeriod = (type: "all" | "today" | "week" | "month" | "30days" | "custom") => {
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
     
     setPeriodType(type);
     
     switch (type) {
+      case "all":
+        setStartDate("");
+        setEndDate("");
+        setShowCustomDates(false);
+        break;
+      
       case "today":
         setStartDate(todayStr);
         setEndDate(todayStr);
@@ -144,18 +169,26 @@ export function CountView() {
   // Recalculate total when selection, period, or data changes
   useEffect(() => {
     const calculate = async () => {
-      if (selectedEntries.size === 0 || !startDate || !endDate) {
+      if (selectedEntries.size === 0) {
         setTotalMinutes(0);
         return;
       }
       
-      const entryIds = Array.from(selectedEntries);
-      const total = await calculateTimeForPeriod(entryIds, startDate, endDate);
-      setTotalMinutes(total);
+      if (periodType === "all") {
+        // Calculate total from all entries
+        const total = allEntries
+          .filter(entry => selectedEntries.has(entry.id))
+          .reduce((sum, entry) => sum + entry.total_duration, 0);
+        setTotalMinutes(total);
+      } else if (startDate && endDate) {
+        const entryIds = Array.from(selectedEntries);
+        const total = await calculateTimeForPeriod(entryIds, startDate, endDate);
+        setTotalMinutes(total);
+      }
     };
     
     calculate();
-  }, [selectedEntries, startDate, endDate, allEntries]); // Added allEntries dependency
+  }, [selectedEntries, startDate, endDate, periodType, allEntries]); // Added periodType dependency
 
   const formatDuration = (minutes: number) => {
     if (minutes < 60) return `${minutes}min`;
@@ -176,7 +209,7 @@ export function CountView() {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedEntry(null);
-    loadEntriesForPeriod();
+    loadData();
   };
 
   return (
@@ -189,6 +222,13 @@ export function CountView() {
           
           {/* Period quick buttons */}
           <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={periodType === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("all")}
+            >
+              {t('entries.all')}
+            </Button>
             <Button
               variant={periodType === "today" ? "default" : "outline"}
               size="sm"
@@ -360,8 +400,14 @@ export function CountView() {
               {selectedEntries.size} {selectedEntries.size > 1 ? t('count.entries') : t('count.entry')} {t('count.selected')}
             </div>
             <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              {t('track.from')} {startDate ? new Date(startDate).toLocaleDateString(i18n.language) : "..."} {t('track.to')}{" "}
-              {endDate ? new Date(endDate).toLocaleDateString(i18n.language) : "..."}
+              {periodType === "all" ? (
+                t('entries.all')
+              ) : (
+                <>
+                  {t('track.from')} {startDate ? new Date(startDate).toLocaleDateString(i18n.language) : "..."} {t('track.to')}{" "}
+                  {endDate ? new Date(endDate).toLocaleDateString(i18n.language) : "..."}
+                </>
+              )}
             </div>
           </div>
           <div className="text-right">

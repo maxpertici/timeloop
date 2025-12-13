@@ -72,6 +72,24 @@ export async function getEntries(): Promise<Entry[]> {
   `);
 }
 
+export async function getEntriesForPeriod(
+  startDate: string,
+  endDate: string
+): Promise<Entry[]> {
+  const database = await getDatabase();
+  return database.select<Entry[]>(
+    `
+    SELECT DISTINCT e.*, c.name as category_name, c.color as category_color
+    FROM entries e
+    LEFT JOIN categories c ON e.category_id = c.id
+    INNER JOIN time_entries te ON e.id = te.entry_id
+    WHERE te.date >= $1 AND te.date <= $2
+    ORDER BY e.title
+  `,
+    [startDate, endDate]
+  );
+}
+
 export async function searchEntries(query: string): Promise<Entry[]> {
   const database = await getDatabase();
   return database.select<Entry[]>(

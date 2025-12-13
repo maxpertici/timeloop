@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, Trash2, Tag, CheckSquare, Square, AlertTriangle } from "lucide-react";
+import { Search, Trash2, Tag, CheckSquare, Square, AlertTriangle, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,7 @@ import { EntryModal } from "@/components/EntryModal";
 import {
   getCategories,
   getEntries,
+  getEntriesForPeriod,
   deleteEntry,
   updateEntry,
 } from "@/lib/database";
@@ -39,19 +40,90 @@ export function EntriesView() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assignCategoryDialogOpen, setAssignCategoryDialogOpen] = useState(false);
   const [selectedCategoryForBatch, setSelectedCategoryForBatch] = useState<string>("none");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [periodType, setPeriodType] = useState<"all" | "today" | "week" | "month" | "30days" | "custom">("all");
+  const [showCustomDates, setShowCustomDates] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [cats, allEntries] = await Promise.all([
-      getCategories(),
-      getEntries(),
-    ]);
+    const cats = await getCategories();
     setCategories(cats);
-    setEntries(allEntries);
+    await loadEntriesForPeriod();
+  }, [startDate, endDate, periodType]);
+
+  const loadEntriesForPeriod = async () => {
+    if (periodType === "all") {
+      const allEntries = await getEntries();
+      setEntries(allEntries);
+    } else if (startDate && endDate) {
+      const periodEntries = await getEntriesForPeriod(startDate, endDate);
+      setEntries(periodEntries);
+    }
+  };
+
+  useEffect(() => {
+    // Set default period: all entries
+    updatePeriod("all");
   }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const updatePeriod = (type: "all" | "today" | "week" | "month" | "30days" | "custom") => {
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    
+    setPeriodType(type);
+    
+    switch (type) {
+      case "all":
+        setStartDate("");
+        setEndDate("");
+        setShowCustomDates(false);
+        break;
+      
+      case "today":
+        setStartDate(todayStr);
+        setEndDate(todayStr);
+        setShowCustomDates(false);
+        break;
+      
+      case "week": {
+        // Start of week (Monday)
+        const startOfWeek = new Date(today);
+        const day = startOfWeek.getDay();
+        const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        startOfWeek.setDate(diff);
+        setStartDate(startOfWeek.toISOString().split("T")[0]);
+        setEndDate(todayStr);
+        setShowCustomDates(false);
+        break;
+      }
+      
+      case "month": {
+        // Start of month
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        setStartDate(startOfMonth.toISOString().split("T")[0]);
+        setEndDate(todayStr);
+        setShowCustomDates(false);
+        break;
+      }
+      
+      case "30days": {
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        setStartDate(thirtyDaysAgo.toISOString().split("T")[0]);
+        setEndDate(todayStr);
+        setShowCustomDates(false);
+        break;
+      }
+      
+      case "custom":
+        setShowCustomDates(true);
+        break;
+    }
+  };
 
   const filteredEntries = entries.filter((entry) =>
     entry.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -149,12 +221,82 @@ export function EntriesView() {
     <div className="min-h-full flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--background)] border-b p-4 space-y-3 shadow-sm">
-        <div className="flex items-center justify-between">
+        {/* Title + Period buttons */}
+        <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl font-semibold">{t('entries.title')}</h1>
-          <div className="text-sm text-[var(--muted-foreground)]">
-            {entries.length} {entries.length > 1 ? t('entries.entries') : t('entries.entry')}
+          
+          {/* Period quick buttons */}
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={periodType === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("all")}
+            >
+              {t('entries.all')}
+            </Button>
+            <Button
+              variant={periodType === "today" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("today")}
+            >
+              {t('count.today')}
+            </Button>
+            <Button
+              variant={periodType === "week" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("week")}
+            >
+              {t('count.thisWeek')}
+            </Button>
+            <Button
+              variant={periodType === "month" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("month")}
+            >
+              {t('count.thisMonth')}
+            </Button>
+            <Button
+              variant={periodType === "30days" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("30days")}
+            >
+              {t('count.last30Days')}
+            </Button>
+            <Button
+              variant={periodType === "custom" ? "default" : "outline"}
+              size="sm"
+              onClick={() => updatePeriod("custom")}
+            >
+              <Calendar className="h-4 w-4 mr-1" />
+              {t('count.custom')}
+            </Button>
           </div>
         </div>
+
+        {/* Custom date inputs (only shown when custom is selected) */}
+        {showCustomDates && (
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <span className="text-sm text-[var(--muted-foreground)]">→</span>
+            <div className="relative flex-1">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Search bar */}
         <div className="relative">
@@ -197,9 +339,9 @@ export function EntriesView() {
 
       {/* Entries list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {/* Select all */}
+        {/* Select all + entries count */}
         {filteredEntries.length > 0 && (
-          <div className="flex items-center gap-2 pb-2">
+          <div className="flex items-center justify-between pb-2">
             <button
               onClick={toggleSelectAll}
               className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
@@ -211,6 +353,9 @@ export function EntriesView() {
               )}
               {t('entries.selectAll')}
             </button>
+            <div className="text-sm text-[var(--muted-foreground)]">
+              {entries.length} {entries.length > 1 ? t('entries.entries') : t('entries.entry')}
+            </div>
           </div>
         )}
 
