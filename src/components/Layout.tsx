@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Clock, Calculator, Tags } from "lucide-react";
+import { Clock, Calculator, List, Tags } from "lucide-react";
 
-type View = "track" | "count" | "categories";
+type View = "track" | "count" | "entries" | "categories";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +12,7 @@ interface LayoutProps {
 const navItems: { id: View; label: string; icon: React.ReactNode }[] = [
   { id: "track", label: "Track", icon: <Clock className="h-5 w-5" /> },
   { id: "count", label: "Count", icon: <Calculator className="h-5 w-5" /> },
+  { id: "entries", label: "Entries", icon: <List className="h-5 w-5" /> },
   { id: "categories", label: "Categories", icon: <Tags className="h-5 w-5" /> },
 ];
 

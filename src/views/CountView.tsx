@@ -192,28 +192,28 @@ export function CountView() {
               size="sm"
               onClick={() => updatePeriod("today")}
             >
-              Aujourd'hui
+              Today
             </Button>
             <Button
               variant={periodType === "week" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("week")}
             >
-              Cette semaine
+              This week
             </Button>
             <Button
               variant={periodType === "month" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("month")}
             >
-              Ce mois
+              This month
             </Button>
             <Button
               variant={periodType === "30days" ? "default" : "outline"}
               size="sm"
               onClick={() => updatePeriod("30days")}
             >
-              30 derniers jours
+              Last 30 days
             </Button>
             <Button
               variant={periodType === "custom" ? "default" : "outline"}
@@ -221,7 +221,7 @@ export function CountView() {
               onClick={() => updatePeriod("custom")}
             >
               <Calendar className="h-4 w-4 mr-1" />
-              Personnalisé
+              Custom
             </Button>
           </div>
         </div>
@@ -256,7 +256,7 @@ export function CountView() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
             <Input
-              placeholder="Rechercher une entrée..."
+              placeholder="Search for an entry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -267,7 +267,7 @@ export function CountView() {
               variant="default" 
               className="px-3 py-1 text-sm shrink-0"
             >
-              {selectedEntries.size} sélectionnée{selectedEntries.size > 1 ? 's' : ''}
+              {selectedEntries.size} selected
             </Badge>
           )}
         </div>
@@ -277,7 +277,7 @@ export function CountView() {
       <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-20">
         {filteredEntries.length === 0 ? (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            <p>Aucune entrée trouvée</p>
+            <p>No entries found</p>
           </div>
         ) : (
           filteredEntries.map((entry) => {
@@ -321,7 +321,7 @@ export function CountView() {
                       )}
                     </div>
                     <div className="text-sm text-[var(--muted-foreground)] mt-0.5">
-                      {entry.entry_count} entrée{entry.entry_count > 1 ? "s" : ""}
+                      {entry.entry_count} {entry.entry_count > 1 ? "entries" : "entry"}
                     </div>
                   </div>
 
@@ -355,11 +355,11 @@ export function CountView() {
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div>
             <div className="text-sm text-[var(--muted-foreground)]">
-              {selectedEntries.size} entrée{selectedEntries.size > 1 ? "s" : ""} sélectionnée{selectedEntries.size > 1 ? "s" : ""}
+              {selectedEntries.size} {selectedEntries.size > 1 ? "entries" : "entry"} selected
             </div>
             <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
-              Du {startDate ? new Date(startDate).toLocaleDateString("fr-FR") : "..."} au{" "}
-              {endDate ? new Date(endDate).toLocaleDateString("fr-FR") : "..."}
+              From {startDate ? new Date(startDate).toLocaleDateString("en-US") : "..."} to{" "}
+              {endDate ? new Date(endDate).toLocaleDateString("en-US") : "..."}
             </div>
           </div>
           <div className="text-right">

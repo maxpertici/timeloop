@@ -82,7 +82,7 @@ export function CategoriesView() {
   };
 
   const handleDeleteClick = (id: number) => {
-    console.log("handleDeleteClick appelé avec id:", id);
+    console.log("handleDeleteClick called with id:", id);
     setCategoryToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -90,39 +90,39 @@ export function CategoriesView() {
   const handleConfirmDelete = async () => {
     if (!categoryToDelete) return;
     
-    console.log("Confirmation obtenue, suppression en cours...");
+    console.log("Confirmation obtained, deleting...");
     try {
       await deleteCategory(categoryToDelete);
-      console.log("Suppression réussie, rechargement des catégories");
+      console.log("Deletion successful, reloading categories");
       await loadCategories();
       setDeleteDialogOpen(false);
       setCategoryToDelete(null);
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      alert("Impossible de supprimer cette catégorie.");
+      console.error("Error during deletion:", error);
+      alert("Unable to delete this category.");
     }
   };
 
   const handleCancelDelete = () => {
-    console.log("Suppression annulée par l'utilisateur");
+    console.log("Deletion cancelled by user");
     setDeleteDialogOpen(false);
     setCategoryToDelete(null);
   };
 
   return (
     <div className="h-full flex flex-col p-4">
-      <h1 className="text-xl font-semibold mb-4">Catégories</h1>
+      <h1 className="text-xl font-semibold mb-4">Categories</h1>
 
       {/* Create form */}
       <div className="space-y-3 mb-6 p-4 bg-[var(--card)] border rounded-lg">
         <Input
-          placeholder="Nom de la catégorie"
+          placeholder="Category name"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
         />
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[var(--muted-foreground)] shrink-0">Couleur:</span>
+          <span className="text-sm text-[var(--muted-foreground)] shrink-0">Color:</span>
           <div className="flex gap-1 flex-wrap flex-1">
             {PRESET_COLORS.map((color) => (
               <button
@@ -137,7 +137,7 @@ export function CategoriesView() {
           </div>
           <Button onClick={handleCreate} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
-            Ajouter
+            Add
           </Button>
         </div>
       </div>
@@ -146,8 +146,8 @@ export function CategoriesView() {
       <div className="flex-1 overflow-y-auto space-y-2">
         {categories.length === 0 ? (
           <div className="text-center py-12 text-[var(--muted-foreground)]">
-            <p>Aucune catégorie</p>
-            <p className="text-sm mt-1">Créez votre première catégorie ci-dessus</p>
+            <p>No categories</p>
+            <p className="text-sm mt-1">Create your first category above</p>
           </div>
         ) : (
           categories.map((cat) => (
@@ -221,19 +221,19 @@ export function CategoriesView() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirmer la suppression
+              Confirm deletion
             </DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible.
-              Les entrées associées perdront leur catégorie.
+              Are you sure you want to delete this category? This action is irreversible.
+              Associated entries will lose their category.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Annuler
+              Cancel
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Supprimer
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

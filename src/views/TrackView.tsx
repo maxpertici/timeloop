@@ -125,8 +125,8 @@ export function TrackView() {
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
     } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      alert("Impossible de supprimer.");
+      console.error("Error during deletion:", error);
+      alert("Unable to delete.");
     }
   };
 
@@ -137,7 +137,7 @@ export function TrackView() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -202,7 +202,7 @@ export function TrackView() {
               className="h-8 px-3"
             >
               <Layers className="h-4 w-4 mr-1" />
-              Groupé
+              Grouped
             </Button>
             <Button
               variant={viewMode === "detailed" ? "default" : "ghost"}
@@ -211,7 +211,7 @@ export function TrackView() {
               className="h-8 px-3"
             >
               <List className="h-4 w-4 mr-1" />
-              Détaillé
+              Detailed
             </Button>
           </div>
         </div>
@@ -221,7 +221,7 @@ export function TrackView() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)] pointer-events-none" />
             <Input
               ref={inputRef}
-              placeholder="Rechercher ou créer une entrée..."
+              placeholder="Search or create an entry..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -248,7 +248,7 @@ export function TrackView() {
                 {searchResults.length > 0 && (
                   <div className="p-1">
                     <div className="px-2 py-1.5 text-xs font-medium text-[var(--muted-foreground)]">
-                      Entrées existantes
+                      Existing entries
                     </div>
                     {searchResults.map((entry) => (
                       <button
@@ -275,14 +275,14 @@ export function TrackView() {
                 {searchQuery.trim() && (
                   <div className="p-1 border-t">
                     <div className="px-2 py-1.5 text-xs font-medium text-[var(--muted-foreground)]">
-                      Nouvelle entrée
+                      New entry
                     </div>
                     <button
                       onClick={handleCreateNewEntry}
                       className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-[var(--accent)] text-left"
                     >
                       <Plus className="h-4 w-4" />
-                      Créer "{searchQuery}"
+                      Create "{searchQuery}"
                     </button>
                   </div>
                 )}
@@ -292,10 +292,10 @@ export function TrackView() {
 
           <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Catégorie" />
+              <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Aucune</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id.toString()}>
                   <div className="flex items-center gap-2">
@@ -359,12 +359,12 @@ export function TrackView() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)] mt-0.5">
-                      <span>{entry.entry_count} entrée{entry.entry_count > 1 ? 's' : ''}</span>
+                      <span>{entry.entry_count} {entry.entry_count > 1 ? 'entries' : 'entry'}</span>
                       <span>•</span>
                       {entry.first_date === entry.last_date ? (
                         <span>{formatDate(entry.last_date)}</span>
                       ) : (
-                        <span>Du {formatDate(entry.first_date)} au {formatDate(entry.last_date)}</span>
+                        <span>From {formatDate(entry.first_date)} to {formatDate(entry.last_date)}</span>
                       )}
                     </div>
                   </div>
@@ -410,7 +410,7 @@ export function TrackView() {
           // Detailed view
           filteredTimeEntries.length === 0 ? (
             <div className="text-center py-12 text-[var(--muted-foreground)]">
-              <p>Aucune entrée de temps</p>
+              <p>No time entries</p>
               <p className="text-sm mt-1">
                 {selectedCategoryId && selectedCategoryId !== "none"
                   ? "Aucune entrée pour cette catégorie"
@@ -514,20 +514,20 @@ export function TrackView() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirmer la suppression
+              Confirm deletion
             </DialogTitle>
             <DialogDescription>
               {deleteTarget?.type === 'entry'
-                ? "Êtes-vous sûr de vouloir supprimer cette entrée et tous ses temps associés ? Cette action est irréversible."
-                : "Êtes-vous sûr de vouloir supprimer ce temps enregistré ? Cette action est irréversible."}
+                ? "Are you sure you want to delete this entry and all its associated times? This action is irreversible."
+                : "Are you sure you want to delete this recorded time? This action is irreversible."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Annuler
+              Cancel
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Supprimer
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

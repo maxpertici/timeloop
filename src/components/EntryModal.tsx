@@ -171,7 +171,7 @@ export function EntryModal({
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("fr-FR", {
+    return d.toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -201,7 +201,7 @@ export function EntryModal({
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={handleTitleBlur}
                 className="text-lg font-semibold flex-1"
-                placeholder="Titre de l'entrée"
+                placeholder="Entry title"
               />
               {currentCategory && (
                 <Badge
@@ -217,7 +217,7 @@ export function EntryModal({
             </div>
             <DialogDescription>
               {isNewEntry
-                ? "Nouvelle entrée créée. Ajoutez du temps ci-dessous."
+                ? "New entry created. Add time below."
                 : `Total: ${formatDuration(totalTime)}`}
             </DialogDescription>
           </div>
@@ -226,13 +226,13 @@ export function EntryModal({
         <div className="space-y-6 py-4">
           {/* Category selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Catégorie</label>
+            <label className="text-sm font-medium">Category</label>
             <Select value={categoryId} onValueChange={handleCategoryChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucune</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                     <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export function EntryModal({
 
           {/* Add time form */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">Ajouter du temps</label>
+            <label className="text-sm font-medium">Add time</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
@@ -276,7 +276,7 @@ export function EntryModal({
               </Button>
             </div>
             <Input
-              placeholder="Note (optionnel)"
+              placeholder="Note (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
@@ -284,10 +284,10 @@ export function EntryModal({
 
           {/* Time entries history */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Historique</label>
+            <label className="text-sm font-medium">History</label>
             {timeEntries.length === 0 ? (
               <p className="text-sm text-[var(--muted-foreground)] py-4 text-center">
-                Aucun temps enregistré
+                No time recorded
               </p>
             ) : (
               <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -316,7 +316,7 @@ export function EntryModal({
                           />
                         </div>
                         <Input
-                          placeholder="Note (optionnel)"
+                          placeholder="Note (optional)"
                           value={editNote}
                           onChange={(e) => setEditNote(e.target.value)}
                           className="bg-white"
@@ -328,7 +328,7 @@ export function EntryModal({
                             onClick={handleSaveEdit}
                           >
                             <Check className="h-4 w-4 mr-1 text-green-600" />
-                            Sauvegarder
+                            Save
                           </Button>
                           <Button
                             variant="ghost"
@@ -336,7 +336,7 @@ export function EntryModal({
                             onClick={handleCancelEdit}
                           >
                             <X className="h-4 w-4 mr-1" />
-                            Annuler
+                            Cancel
                           </Button>
                         </div>
                       </div>
@@ -392,18 +392,18 @@ export function EntryModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-[var(--destructive)]" />
-              Confirmer la suppression
+              Confirm deletion
             </DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce temps enregistré ? Cette action est irréversible.
+              Are you sure you want to delete this recorded time? This action is irreversible.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelDelete}>
-              Annuler
+              Cancel
             </Button>
             <Button variant="destructive" onClick={handleConfirmDelete}>
-              Supprimer
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

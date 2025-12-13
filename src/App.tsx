@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { TrackView } from "@/views/TrackView";
 import { CountView } from "@/views/CountView";
+import { EntriesView } from "@/views/EntriesView";
 import { CategoriesView } from "@/views/CategoriesView";
 
-type View = "track" | "count" | "categories";
+type View = "track" | "count" | "entries" | "categories";
 
 function App() {
   const [currentView, setCurrentView] = useState<View>("track");
@@ -15,6 +16,8 @@ function App() {
         return <TrackView />;
       case "count":
         return <CountView />;
+      case "entries":
+        return <EntriesView />;
       case "categories":
         return <CategoriesView />;
     }
