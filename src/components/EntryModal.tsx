@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TimeInput } from "@/components/ui/time-input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -38,6 +39,8 @@ interface EntryModalProps {
   onDataChanged?: () => void;
 }
 
+type TimeInputMode = "minutes" | "hours" | "time";
+
 export function EntryModal({
   entry,
   isOpen,
@@ -49,12 +52,19 @@ export function EntryModal({
   const { t, i18n } = useTranslation();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [duration, setDuration] = useState("");
+  const [hours, setHours] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
   const [title, setTitle] = useState(entry.title);
   const [categoryId, setCategoryId] = useState(
     entry.category_id?.toString() || "none"
   );
+  const [inputMode, setInputMode] = useState<TimeInputMode>(() => {
+    const saved = localStorage.getItem("timeInputMode");
+    return (saved as TimeInputMode) || "minutes";
+  });
   const [editingTimeEntryId, setEditingTimeEntryId] = useState<number | null>(null);
   const [editDuration, setEditDuration] = useState("");
   const [editDate, setEditDate] = useState("");
@@ -66,12 +76,25 @@ export function EntryModal({
   const durationInputRef = useRef<HTMLInputElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
+  const handleModeChange = (mode: TimeInputMode) => {
+    console.log("Mode changed to:", mode);
+    setInputMode(mode);
+    localStorage.setItem("timeInputMode", mode);
+    // Reset inputs when changing mode
+    setDuration("");
+    setHours("");
+    setStartTime("");
+    setEndTime("");
+    console.log("Inputs reset for mode:", mode);
+  };
+
   const loadTimeEntries = async () => {
     const entries = await getTimeEntriesForEntry(entry.id);
     setTimeEntries(entries);
   };
 
   useEffect(() => {
+    console.log("Modal isOpen changed:", isOpen);
     if (isOpen) {
       loadTimeEntries();
       setTitle(entry.title);
@@ -82,12 +105,60 @@ export function EntryModal({
         durationInputRef.current?.focus();
       }, 100);
     }
+    console.log("Current inputMode:", inputMode, "startTime:", startTime, "endTime:", endTime);
   }, [isOpen, entry.id, entry.title, entry.category_id]);
 
   const handleAddTime = async () => {
-    const durationMinutes = parseInt(duration);
-    if (isNaN(durationMinutes) || durationMinutes <= 0) return;
+    console.log("handleAddTime called, mode:", inputMode);
+    let durationMinutes = 0;
 
+    if (inputMode === "minutes") {
+      durationMinutes = parseInt(duration);
+      console.log("Minutes mode, duration:", duration, "parsed:", durationMinutes);
+      if (isNaN(durationMinutes) || durationMinutes <= 0) return;
+    } else if (inputMode === "hours") {
+      const hoursValue = parseFloat(hours);
+      console.log("Hours mode, hours:", hours, "parsed:", hoursValue);
+      if (isNaN(hoursValue) || hoursValue <= 0) return;
+      durationMinutes = Math.round(hoursValue * 60);
+    } else if (inputMode === "time") {
+      // Parse start time (format: "HH:MM")
+      if (!startTime || !endTime) {
+        console.log("Missing start or end time");
+        return;
+      }
+      
+      const [startH, startM] = startTime.split(":").map(Number);
+      const [endH, endM] = endTime.split(":").map(Number);
+      
+      console.log("Time mode - start:", startH, "h", startM, "m, end:", endH, "h", endM, "m");
+      
+      if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
+        console.log("Invalid time values");
+        return;
+      }
+      
+      const startTotalMinutes = startH * 60 + startM;
+      const endTotalMinutes = endH * 60 + endM;
+      
+      durationMinutes = endTotalMinutes - startTotalMinutes;
+      
+      console.log("Calculated duration:", durationMinutes, "minutes");
+      
+      if (durationMinutes <= 0) {
+        console.log("Invalid time range");
+        return;
+      }
+    }
+
+    console.log("Final duration in minutes:", durationMinutes);
+
+    if (durationMinutes <= 0) {
+      console.log("Duration is 0 or negative - RETURNING");
+      return;
+    }
+
+    console.log("Creating time entry...");
     await createTimeEntry(
       entry.id,
       durationMinutes,
@@ -95,7 +166,11 @@ export function EntryModal({
       note.trim() || null
     );
 
+    console.log("Time entry created, resetting form");
     setDuration("");
+    setHours("");
+    setStartTime("");
+    setEndTime("");
     setNote("");
     setDate(new Date().toISOString().split("T")[0]);
     await loadTimeEntries();
@@ -228,7 +303,7 @@ export function EntryModal({
         <DialogHeader className="-mt-2">
           <div className="space-y-2">
             {/* Category badge at top left - aligned with close button */}
-            <div className="min-h-[20px] flex items-center pb-3 mb-6 border-b">
+            <div className="min-h-[20px] flex items-center pb-4 mb-6 border-b">
               {currentCategory ? (
                 <Badge
                   variant="secondary"
@@ -287,7 +362,7 @@ export function EntryModal({
               </div>
             </div>
             
-            <DialogDescription className="mt-4">
+            <DialogDescription className="mt-1">
               {isNewEntry
                 ? t('entryModal.newEntryCreated')
                 : t('entryModal.total', { time: formatDuration(totalTime) })}
@@ -295,10 +370,10 @@ export function EntryModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-6 pt-4">
+        <div className="space-y-8">
           {/* Category selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('entryModal.category')}</label>
+          <div className="pb-8 border-b">
+            <label className="text-sm font-medium block mb-3">{t('entryModal.category')}</label>
             <Select value={categoryId} onValueChange={handleCategoryChange}>
               <SelectTrigger>
                 <SelectValue placeholder={t('entryModal.selectCategoryPlaceholder')} />
@@ -322,18 +397,80 @@ export function EntryModal({
 
           {/* Add time form */}
           <div className="space-y-3">
-            <label className="text-sm font-medium">{t('entryModal.addTime')}</label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  ref={durationInputRef}
-                  type="number"
-                  placeholder={t('entryModal.minutes')}
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  min="1"
-                />
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">{t('entryModal.addTime')}</label>
+              <div className="flex gap-1 bg-[var(--muted)] p-1 rounded-lg">
+                <Button
+                  variant={inputMode === "minutes" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleModeChange("minutes")}
+                  className="h-7 px-2 text-xs"
+                >
+                  {t('entryModal.minutes')}
+                </Button>
+                <Button
+                  variant={inputMode === "hours" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleModeChange("hours")}
+                  className="h-7 px-2 text-xs"
+                >
+                  {t('entryModal.hours')}
+                </Button>
+                <Button
+                  variant={inputMode === "time" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleModeChange("time")}
+                  className="h-7 px-2 text-xs"
+                >
+                  {t('entryModal.time')}
+                </Button>
               </div>
+            </div>
+
+            <div className="flex gap-2">
+              {inputMode === "minutes" && (
+                <div className="flex-1">
+                  <Input
+                    ref={durationInputRef}
+                    type="number"
+                    placeholder={t('entryModal.minutesPlaceholder')}
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    min="1"
+                  />
+                </div>
+              )}
+              {inputMode === "hours" && (
+                <div className="flex-1">
+                  <Input
+                    ref={durationInputRef}
+                    type="number"
+                    step="0.25"
+                    placeholder={t('entryModal.hoursPlaceholder')}
+                    value={hours}
+                    onChange={(e) => setHours(e.target.value)}
+                    min="0.25"
+                  />
+                </div>
+              )}
+              {inputMode === "time" && (
+                <div className="flex-1 flex gap-2 items-center">
+                  <TimeInput
+                    ref={durationInputRef}
+                    value={startTime}
+                    onChange={setStartTime}
+                    placeholder="08:00"
+                    className="w-24"
+                  />
+                  <span className="text-sm text-[var(--muted-foreground)]">→</span>
+                  <TimeInput
+                    value={endTime}
+                    onChange={setEndTime}
+                    placeholder="17:00"
+                    className="w-24"
+                  />
+                </div>
+              )}
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)]" />
                 <Input
@@ -355,14 +492,14 @@ export function EntryModal({
           </div>
 
           {/* Time entries history */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('entryModal.history')}</label>
+          <div className="pt-8 border-t">
+            <label className="text-sm font-medium block mb-3">{t('entryModal.history')}</label>
             {timeEntries.length === 0 ? (
               <p className="text-sm text-[var(--muted-foreground)] py-4 text-center">
                 {t('entryModal.noTimeRecorded')}
               </p>
             ) : (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              <div className="space-y-2">
                 {timeEntries.map((te) => (
                   <div
                     key={te.id}
