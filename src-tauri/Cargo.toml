@@ -1,6 +1,6 @@
 [package]
 name = "timeloop"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Tauri App"
 authors = ["Max Pertici"]
 edition = "2021"
