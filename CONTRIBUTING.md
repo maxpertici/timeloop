@@ -47,6 +47,7 @@ Make sure you have the following installed:
 ```bash
 git clone https://github.com/maxpertici/timeloop.git
 cd timeloop
+git checkout dev  # Switch to development branch
 ```
 
 2. **Install dependencies**
@@ -153,9 +154,20 @@ export function CustomButton({ label, onClick }: ButtonProps) {
 
 ### Branching Strategy
 
-Create a new branch for each contribution:
+We use a **two-branch workflow**:
+- `main` - Production-ready code (stable releases)
+- `dev` - Development branch (active development)
+
+**All pull requests must be made to the `dev` branch.**
+
+Create a new branch from `dev` for each contribution:
 
 ```bash
+# First, make sure you're on dev and it's up to date
+git checkout dev
+git pull origin dev
+
+# Then create your feature branch
 git checkout -b feature/your-feature-name
 git checkout -b fix/your-bug-fix
 git checkout -b docs/your-documentation-update
@@ -167,6 +179,8 @@ Branch naming conventions:
 - `docs/` - Documentation updates
 - `refactor/` - Code refactoring
 - `i18n/` - Translation updates
+
+
 
 ### Commit Messages
 
@@ -199,13 +213,22 @@ git commit -m "i18n: add Spanish translation"
 
 ### Pull Requests
 
-1. **Update your branch** with the latest changes from `main`
-2. **Test your changes** thoroughly
-3. **Create a pull request** with:
+1. **Test your changes** thoroughly
+
+2. **Push your branch** to your fork
+
+```bash
+git push origin your-branch-name
+```
+
+3. **Create a pull request** targeting the `dev` branch with:
    - Clear title following commit conventions
    - Description of what changed and why
    - Screenshots (for UI changes)
    - Link to related issue (if applicable)
+
+**Important**: 
+- Your feature branch will be **merged** into `dev` via the pull request
 
 **PR Template:**
 
@@ -225,6 +248,15 @@ How to test these changes
 ## Screenshots (if applicable)
 Add screenshots here
 ```
+
+### Release Process
+
+When `dev` is ready for a new version, it will be merged into `main` and a new release will be created with the appropriate version tag.
+
+**Version Naming**: Follow [Semantic Versioning](https://semver.org/)
+- `v1.0.0` - Major release (breaking changes)
+- `v1.1.0` - Minor release (new features)
+- `v1.0.1` - Patch release (bug fixes)
 
 ## Internationalization
 
@@ -261,6 +293,7 @@ resources: {
 - Use **proper capitalization** for your language
 - Test the UI with your translation to ensure text fits properly
 
+Important note: The app doesn't have settings yet and automatically selects the language based on your OS language.
 
 ## Testing
 
