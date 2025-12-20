@@ -14,7 +14,6 @@ Timeloop is a minimalist time tracking application, and we welcome contributions
 - [Internationalization](#internationalization)
 - [Testing](#testing)
 - [Building](#building)
-- [Code of Conduct](#code-of-conduct)
 - [Questions](#questions)
 
 ## Types of Contributions
